@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          BigInt   @id
+  username    String?
+  firstName   String?
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sessions    Session[]
+  exchanges   Exchange[]
+}
+
+model Session {
+  userId      BigInt   @id
+  step        String   @default("idle")
+  fromAsset   String?
+  toAsset     String?
+  amount      Decimal? @db.Decimal(36, 18)
+  payoutAddr  String?
+  payoutExtra String?
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Exchange {
+  id              String   @id
+  userId          BigInt
+  fromAsset       String
+  toAsset         String
+  amount          Decimal  @db.Decimal(36, 18)
+  expectedAmount  Decimal? @db.Decimal(36, 18)
+  payoutAddress   String
+  payoutExtraId   String?
+  payinAddress    String
+  payinExtraId    String?
+  status          String
+  payoutHash      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
